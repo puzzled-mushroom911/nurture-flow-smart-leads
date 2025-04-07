@@ -3,7 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
 const GHL_AUTH_URL = "https://marketplace.gohighlevel.com/oauth/chooselocation";
-const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID");
+// Fix: Use correct case for environment variables to match what's in Supabase
+const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,7 @@ serve(async (req) => {
 
   try {
     if (!GHL_CLIENT_ID) {
+      console.error("GoHighLevel Client ID not found. Available env vars:", Object.keys(Deno.env.toObject()));
       throw new Error("GoHighLevel Client ID not configured");
     }
 

@@ -4,8 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const SUPABASE_URL = "https://vxgvmmudspqwsaedcmsl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Z3ZtbXVkc3Bxd3NhZWRjbXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5ODk4MzgsImV4cCI6MjA1OTU2NTgzOH0.wSYR4wG-jL2ZjYsluabFRGQKqtajPFhWrqE8QAd0YXw";
-const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID");
-const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET");
+// Fix: Try both possible environment variable names to maintain compatibility
+const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
+const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret");
 const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
 const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
 const FRONTEND_URL = "http://localhost:5173"; // This will need to be updated in production
@@ -32,6 +33,7 @@ serve(async (req) => {
     }
     
     if (!GHL_CLIENT_ID || !GHL_CLIENT_SECRET) {
+      console.error("GoHighLevel credentials not found. Available env vars:", Object.keys(Deno.env.toObject()));
       throw new Error("GoHighLevel credentials not configured");
     }
 
