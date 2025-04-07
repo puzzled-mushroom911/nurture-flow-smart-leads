@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -28,7 +29,10 @@ serve(async (req) => {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
     
+    console.log("Received callback request with URL params:", { code: code ? "present" : "missing", state });
+    
     if (!code) {
+      console.error("Missing authorization code from GoHighLevel");
       throw new Error("Missing authorization code from GoHighLevel");
     }
     
@@ -37,7 +41,7 @@ serve(async (req) => {
       throw new Error("GoHighLevel credentials not configured");
     }
 
-    console.log(`Received callback with code: ${code}`);
+    console.log(`Received callback with code: ${code.substring(0, 5)}...`);
     
     // Fix: Change the token exchange to use application/x-www-form-urlencoded format
     const formData = new URLSearchParams();
@@ -48,131 +52,139 @@ serve(async (req) => {
     formData.append("redirect_uri", REDIRECT_URI);
     
     // Exchange code for access token using form-urlencoded content type
-    const tokenResponse = await fetch(GHL_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString()
-    });
+    console.log("Sending token exchange request to:", GHL_TOKEN_URL);
     
-    if (!tokenResponse.ok) {
-      const contentType = tokenResponse.headers.get("content-type") || "";
-      let errorText;
-      
-      if (contentType.includes("application/json")) {
-        errorText = JSON.stringify(await tokenResponse.json());
-      } else {
-        // Handle HTML or other non-JSON responses
-        errorText = await tokenResponse.text();
-        // Limit the size of the error text to avoid overwhelming logs
-        errorText = errorText.length > 200 
-          ? errorText.substring(0, 200) + "... [truncated]" 
-          : errorText;
-        
-        // Look for common patterns in error responses
-        if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
-          errorText = "Received HTML response instead of JSON. Check if the redirect URI is properly configured in GoHighLevel.";
-        }
-      }
-      
-      console.error("Token exchange error:", errorText);
-      console.error("Response status:", tokenResponse.status);
-      console.error("Response headers:", Object.fromEntries(tokenResponse.headers.entries()));
-      throw new Error(`Failed to exchange code for token. Status: ${tokenResponse.status}. Error: ${errorText}`);
-    }
-    
-    // Parse the response carefully
-    let tokenData;
     try {
-      tokenData = await tokenResponse.json();
-      console.log("Received token response:", JSON.stringify(tokenData));
-    } catch (e) {
-      console.error("Error parsing token response:", e);
-      const textResponse = await tokenResponse.text();
-      throw new Error(`Invalid JSON in token response: ${textResponse.substring(0, 200)}`);
-    }
-    
-    const { access_token, refresh_token, expires_in, locationId, companyId } = tokenData;
-    
-    if (!access_token || !refresh_token) {
-      throw new Error("Invalid token response from GoHighLevel: Missing required tokens");
-    }
-    
-    // If locationId and companyId are not included in the token response, fetch the current location
-    let finalLocationId = locationId;
-    let finalCompanyId = companyId;
-    
-    if (!finalLocationId || !finalCompanyId) {
-      console.log("Location and company ID not provided in token response, fetching from API");
-      const locationResponse = await fetch(`${GHL_API_URL}/locations/v1/location`, {
-        headers: {
-          "Authorization": `Bearer ${access_token}`,
-          "Content-Type": "application/json",
-        }
+      const tokenResponse = await fetch(GHL_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
       });
       
-      if (!locationResponse.ok) {
-        const errorText = await locationResponse.text();
-        console.error("Error fetching location data:", errorText);
-        throw new Error(`Failed to retrieve location information. Status: ${locationResponse.status}`);
-      }
+      console.log("Token response status:", tokenResponse.status);
       
-      let locationData;
-      try {
-        locationData = await locationResponse.json();
-        console.log("Location data:", JSON.stringify(locationData));
-      } catch (e) {
-        console.error("Error parsing location response:", e);
-        throw new Error("Failed to parse location data as JSON");
-      }
-      
-      if (locationData && locationData.location) {
-        finalLocationId = locationData.location.id;
-        finalCompanyId = locationData.location.companyId;
+      // Important: Check if response was successful before attempting to read body
+      if (!tokenResponse.ok) {
+        const contentType = tokenResponse.headers.get("content-type") || "";
+        let errorData;
         
-        if (!finalLocationId || !finalCompanyId) {
-          throw new Error("Could not determine location and company IDs from response");
+        if (contentType.includes("application/json")) {
+          errorData = await tokenResponse.json();
+          console.error("Token exchange error (JSON):", JSON.stringify(errorData));
+        } else {
+          // Handle HTML or other non-JSON responses
+          const errorText = await tokenResponse.text();
+          console.error("Token exchange error (text):", errorText.substring(0, 200));
+          if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
+            throw new Error("Received HTML response. Check if redirect URI is properly configured in GoHighLevel.");
+          } else {
+            throw new Error(`Failed to exchange code for token. Status: ${tokenResponse.status}`);
+          }
         }
-      } else {
-        throw new Error("Invalid location data response from GoHighLevel");
+        
+        throw new Error(`Token exchange failed with status: ${tokenResponse.status}`);
       }
-    }
-    
-    // Calculate token expiration date
-    const token_expires_at = new Date();
-    token_expires_at.setSeconds(token_expires_at.getSeconds() + expires_in);
-    
-    // Store the installation in Supabase
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    const { data, error } = await supabase
-      .from('ghl_installations')
-      .upsert({
-        company_id: finalCompanyId,
-        location_id: finalLocationId,
-        access_token,
-        refresh_token,
-        token_expires_at: token_expires_at.toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'company_id,location_id'
-      })
-      .select();
-    
-    if (error) {
-      console.error("Error storing installation:", error);
-      throw new Error(`Failed to store installation: ${error.message}`);
-    }
-    
-    console.log("Installation stored successfully:", data);
-    
-    // Redirect back to frontend with success message
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        "Location": `${FRONTEND_URL}/settings?integration=success&location=${finalLocationId}`
+      
+      // Parse JSON response only once and store the result
+      const tokenData = await tokenResponse.json();
+      console.log("Received token response:", JSON.stringify({
+        access_token: tokenData.access_token ? "present" : "missing",
+        refresh_token: tokenData.refresh_token ? "present" : "missing",
+        expires_in: tokenData.expires_in,
+        locationId: tokenData.locationId,
+        companyId: tokenData.companyId
+      }));
+      
+      const { access_token, refresh_token, expires_in, locationId, companyId } = tokenData;
+      
+      if (!access_token || !refresh_token) {
+        throw new Error("Invalid token response from GoHighLevel: Missing required tokens");
       }
-    });
+      
+      // If locationId and companyId are not included in the token response, fetch the current location
+      let finalLocationId = locationId;
+      let finalCompanyId = companyId;
+      
+      if (!finalLocationId || !finalCompanyId) {
+        console.log("Location and company ID not provided in token response, fetching from API");
+        
+        try {
+          const locationResponse = await fetch(`${GHL_API_URL}/locations/v1/location`, {
+            headers: {
+              "Authorization": `Bearer ${access_token}`,
+              "Content-Type": "application/json",
+            }
+          });
+          
+          if (!locationResponse.ok) {
+            const locationErrorText = await locationResponse.text();
+            console.error("Error fetching location data:", locationErrorText);
+            throw new Error(`Failed to retrieve location information. Status: ${locationResponse.status}`);
+          }
+          
+          const locationData = await locationResponse.json();
+          console.log("Location data:", JSON.stringify(locationData));
+          
+          if (locationData && locationData.location) {
+            finalLocationId = locationData.location.id;
+            finalCompanyId = locationData.location.companyId;
+            
+            if (!finalLocationId || !finalCompanyId) {
+              throw new Error("Could not determine location and company IDs from response");
+            }
+            
+            console.log("Retrieved location and company IDs:", { finalLocationId, finalCompanyId });
+          } else {
+            throw new Error("Invalid location data response from GoHighLevel");
+          }
+        } catch (locationError) {
+          console.error("Error during location fetch:", locationError);
+          throw locationError;
+        }
+      }
+      
+      // Calculate token expiration date
+      const token_expires_at = new Date();
+      token_expires_at.setSeconds(token_expires_at.getSeconds() + expires_in);
+      
+      // Store the installation in Supabase
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      console.log("Storing installation in database...");
+      const { data, error } = await supabase
+        .from('ghl_installations')
+        .upsert({
+          company_id: finalCompanyId,
+          location_id: finalLocationId,
+          access_token,
+          refresh_token,
+          token_expires_at: token_expires_at.toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'company_id,location_id'
+        })
+        .select();
+      
+      if (error) {
+        console.error("Error storing installation:", error);
+        throw new Error(`Failed to store installation: ${error.message}`);
+      }
+      
+      console.log("Installation stored successfully:", data);
+      
+      // Redirect back to frontend with success message
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          "Location": `${FRONTEND_URL}/settings?integration=success&location=${finalLocationId}`
+        }
+      });
+    
+    } catch (tokenError) {
+      console.error("Token exchange error:", tokenError);
+      throw tokenError;
+    }
     
   } catch (error) {
     console.error("Error in GoHighLevel OAuth callback:", error);
