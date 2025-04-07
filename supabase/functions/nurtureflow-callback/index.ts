@@ -56,18 +56,46 @@ serve(async (req) => {
     });
     
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
+      const contentType = tokenResponse.headers.get("content-type") || "";
+      let errorText;
+      
+      if (contentType.includes("application/json")) {
+        errorText = JSON.stringify(await tokenResponse.json());
+      } else {
+        // Handle HTML or other non-JSON responses
+        errorText = await tokenResponse.text();
+        // Limit the size of the error text to avoid overwhelming logs
+        errorText = errorText.length > 200 
+          ? errorText.substring(0, 200) + "... [truncated]" 
+          : errorText;
+        
+        // Look for common patterns in error responses
+        if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
+          errorText = "Received HTML response instead of JSON. Check if the redirect URI is properly configured in GoHighLevel.";
+        }
+      }
+      
       console.error("Token exchange error:", errorText);
-      throw new Error(`Failed to exchange code for token: ${errorText}`);
+      console.error("Response status:", tokenResponse.status);
+      console.error("Response headers:", Object.fromEntries(tokenResponse.headers.entries()));
+      throw new Error(`Failed to exchange code for token. Status: ${tokenResponse.status}. Error: ${errorText}`);
     }
     
-    const tokenData = await tokenResponse.json();
-    console.log("Received token response:", JSON.stringify(tokenData));
+    // Parse the response carefully
+    let tokenData;
+    try {
+      tokenData = await tokenResponse.json();
+      console.log("Received token response:", JSON.stringify(tokenData));
+    } catch (e) {
+      console.error("Error parsing token response:", e);
+      const textResponse = await tokenResponse.text();
+      throw new Error(`Invalid JSON in token response: ${textResponse.substring(0, 200)}`);
+    }
     
     const { access_token, refresh_token, expires_in, locationId, companyId } = tokenData;
     
     if (!access_token || !refresh_token) {
-      throw new Error("Invalid token response from GoHighLevel");
+      throw new Error("Invalid token response from GoHighLevel: Missing required tokens");
     }
     
     // If locationId and companyId are not included in the token response, fetch the current location
@@ -86,18 +114,24 @@ serve(async (req) => {
       if (!locationResponse.ok) {
         const errorText = await locationResponse.text();
         console.error("Error fetching location data:", errorText);
-        throw new Error("Failed to retrieve location information");
+        throw new Error(`Failed to retrieve location information. Status: ${locationResponse.status}`);
       }
       
-      const locationData = await locationResponse.json();
-      console.log("Location data:", JSON.stringify(locationData));
+      let locationData;
+      try {
+        locationData = await locationResponse.json();
+        console.log("Location data:", JSON.stringify(locationData));
+      } catch (e) {
+        console.error("Error parsing location response:", e);
+        throw new Error("Failed to parse location data as JSON");
+      }
       
       if (locationData && locationData.location) {
         finalLocationId = locationData.location.id;
         finalCompanyId = locationData.location.companyId;
         
         if (!finalLocationId || !finalCompanyId) {
-          throw new Error("Could not determine location and company IDs");
+          throw new Error("Could not determine location and company IDs from response");
         }
       } else {
         throw new Error("Invalid location data response from GoHighLevel");

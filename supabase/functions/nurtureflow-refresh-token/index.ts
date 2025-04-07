@@ -80,13 +80,40 @@ serve(async (req) => {
     });
     
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
+      const contentType = tokenResponse.headers.get("content-type") || "";
+      let errorText;
+      
+      if (contentType.includes("application/json")) {
+        errorText = JSON.stringify(await tokenResponse.json());
+      } else {
+        // Handle HTML or other non-JSON responses
+        errorText = await tokenResponse.text();
+        errorText = errorText.length > 200 
+          ? errorText.substring(0, 200) + "... [truncated]" 
+          : errorText;
+      }
+      
       console.error("Token refresh error:", errorText);
-      throw new Error(`Failed to refresh token: ${errorText}`);
+      console.error("Response status:", tokenResponse.status);
+      console.error("Response headers:", Object.fromEntries(tokenResponse.headers.entries()));
+      throw new Error(`Failed to refresh token. Status: ${tokenResponse.status}. Error: ${errorText}`);
     }
     
-    const tokenData = await tokenResponse.json();
+    // Parse the response carefully
+    let tokenData;
+    try {
+      tokenData = await tokenResponse.json();
+    } catch (e) {
+      console.error("Error parsing token refresh response:", e);
+      const textResponse = await tokenResponse.text();
+      throw new Error(`Invalid JSON in token response: ${textResponse.substring(0, 200)}`);
+    }
+    
     const { access_token, refresh_token, expires_in } = tokenData;
+    
+    if (!access_token || !refresh_token) {
+      throw new Error("Invalid token response from GoHighLevel: Missing required tokens");
+    }
     
     // Calculate new expiration date
     const token_expires_at = new Date();
