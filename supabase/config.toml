@@ -1,5 +1,14 @@
 
 project_id = "vxgvmmudspqwsaedcmsl"
 
-[functions.ghl-webhook]
+[functions.nurtureflow-webhook]
+verify_jwt = false
+
+[functions.nurtureflow-auth]
+verify_jwt = false
+
+[functions.nurtureflow-callback]
+verify_jwt = false
+
+[functions.nurtureflow-refresh-token]
 verify_jwt = false

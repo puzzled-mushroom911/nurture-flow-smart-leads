@@ -53,7 +53,7 @@ export default function GHLIntegration() {
   });
 
   const handleConnect = () => {
-    window.location.href = 'https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/ghl-auth';
+    window.location.href = 'https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-auth';
   };
 
   return (
