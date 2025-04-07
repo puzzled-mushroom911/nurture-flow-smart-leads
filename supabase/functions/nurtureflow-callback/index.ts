@@ -7,8 +7,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Fix: Try both possible environment variable names to maintain compatibility
 const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
 const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret");
-// Fix: Update to the correct OAuth token URL
-const GHL_TOKEN_URL = "https://marketplace.gohighlevel.com/oauth/token";
+// IMPORTANT: This is the correct OAuth token URL for GoHighLevel
+const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
 const GHL_API_URL = "https://services.leadconnectorhq.com";
 const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
 const FRONTEND_URL = "https://preview--nurture-flow-smart-leads.lovable.app";
@@ -43,22 +43,20 @@ serve(async (req) => {
 
     console.log(`Received callback with code: ${code.substring(0, 5)}...`);
     
-    // Fix: Change the token exchange to use application/x-www-form-urlencoded format
-    const formData = new URLSearchParams();
-    formData.append("client_id", GHL_CLIENT_ID);
-    formData.append("client_secret", GHL_CLIENT_SECRET);
-    formData.append("grant_type", "authorization_code");
-    formData.append("code", code);
-    formData.append("redirect_uri", REDIRECT_URI);
-    
-    // Exchange code for access token using form-urlencoded content type
+    // Exchange code for access token using JSON format (not form-urlencoded)
     console.log("Sending token exchange request to:", GHL_TOKEN_URL);
     
     try {
       const tokenResponse = await fetch(GHL_TOKEN_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString()
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: GHL_CLIENT_ID,
+          client_secret: GHL_CLIENT_SECRET,
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: REDIRECT_URI
+        })
       });
       
       console.log("Token response status:", tokenResponse.status);
@@ -66,27 +64,47 @@ serve(async (req) => {
       // Important: Check if response was successful before attempting to read body
       if (!tokenResponse.ok) {
         const contentType = tokenResponse.headers.get("content-type") || "";
-        let errorData;
+        let errorMessage = `Failed to exchange code for token. Status: ${tokenResponse.status}`;
         
-        if (contentType.includes("application/json")) {
-          errorData = await tokenResponse.json();
-          console.error("Token exchange error (JSON):", JSON.stringify(errorData));
-        } else {
-          // Handle HTML or other non-JSON responses
-          const errorText = await tokenResponse.text();
-          console.error("Token exchange error (text):", errorText.substring(0, 200));
-          if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
-            throw new Error("Received HTML response. Check if redirect URI is properly configured in GoHighLevel.");
+        try {
+          if (contentType.includes("application/json")) {
+            const errorData = await tokenResponse.json();
+            errorMessage = `API Error: ${JSON.stringify(errorData)}`;
+            console.error("Token exchange error (JSON):", errorMessage);
           } else {
-            throw new Error(`Failed to exchange code for token. Status: ${tokenResponse.status}`);
+            // For HTML or other responses, just get a snippet of text
+            const errorText = await tokenResponse.text();
+            const snippet = errorText.substring(0, 200) + (errorText.length > 200 ? '...' : '');
+            errorMessage = `Received non-JSON response. First 200 chars: ${snippet}`;
+            console.error("Token exchange error (non-JSON):", errorMessage);
+            
+            if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
+              throw new Error("Received HTML response. Check if redirect URI and credentials are properly configured in GoHighLevel.");
+            }
           }
+        } catch (parseError) {
+          errorMessage = `Error parsing response: ${parseError.message}`;
+          console.error("Error parsing response:", parseError);
         }
         
-        throw new Error(`Token exchange failed with status: ${tokenResponse.status}`);
+        throw new Error(errorMessage);
       }
       
       // Parse JSON response only once and store the result
-      const tokenData = await tokenResponse.json();
+      let tokenData;
+      try {
+        const responseText = await tokenResponse.text();
+        try {
+          tokenData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Failed to parse token response as JSON:", responseText.substring(0, 200));
+          throw new Error(`Failed to parse token response as JSON: ${parseError.message}`);
+        }
+      } catch (textError) {
+        console.error("Error reading token response body:", textError);
+        throw new Error(`Error reading token response: ${textError.message}`);
+      }
+      
       console.log("Received token response:", JSON.stringify({
         access_token: tokenData.access_token ? "present" : "missing",
         refresh_token: tokenData.refresh_token ? "present" : "missing",

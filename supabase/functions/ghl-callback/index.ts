@@ -65,22 +65,47 @@ serve(async (req) => {
       
       if (!tokenResponse.ok) {
         const contentType = tokenResponse.headers.get("content-type") || "";
-        let errorMessage;
+        let errorMessage = `Failed to exchange code for token. Status: ${tokenResponse.status}`;
         
-        if (contentType.includes("application/json")) {
-          const errorData = await tokenResponse.json();
-          errorMessage = JSON.stringify(errorData);
-        } else {
-          const errorText = await tokenResponse.text();
-          errorMessage = errorText.substring(0, 200);
+        try {
+          if (contentType.includes("application/json")) {
+            const errorData = await tokenResponse.json();
+            errorMessage = `API Error: ${JSON.stringify(errorData)}`;
+            console.error("Token exchange error (JSON):", errorMessage);
+          } else {
+            // For HTML or other responses, just get a snippet of text
+            const errorText = await tokenResponse.text();
+            const snippet = errorText.substring(0, 200) + (errorText.length > 200 ? '...' : '');
+            errorMessage = `Received non-JSON response. First 200 chars: ${snippet}`;
+            console.error("Token exchange error (non-JSON):", errorMessage);
+            
+            if (errorText.includes("DOCTYPE") || errorText.includes("<html")) {
+              throw new Error("Received HTML response. Check if redirect URI and credentials are properly configured.");
+            }
+          }
+        } catch (parseError) {
+          errorMessage = `Error parsing response: ${parseError.message}`;
+          console.error("Error parsing response:", parseError);
         }
         
-        console.error("Token exchange error:", errorMessage);
-        throw new Error(`Failed to exchange code for token: ${tokenResponse.status}`);
+        throw new Error(errorMessage);
       }
       
-      // Parse the token data only once
-      const tokenData = await tokenResponse.json();
+      // Parse the token data safely
+      let tokenData;
+      try {
+        const responseText = await tokenResponse.text();
+        try {
+          tokenData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Failed to parse token response as JSON:", responseText.substring(0, 200));
+          throw new Error(`Failed to parse token response as JSON: ${parseError.message}`);
+        }
+      } catch (textError) {
+        console.error("Error reading token response body:", textError);
+        throw new Error(`Error reading token response: ${textError.message}`);
+      }
+      
       console.log("Received token response:", JSON.stringify({
         access_token: tokenData.access_token ? "present" : "missing",
         refresh_token: tokenData.refresh_token ? "present" : "missing",
@@ -90,7 +115,7 @@ serve(async (req) => {
       const { access_token, refresh_token, expires_in } = tokenData;
       
       if (!access_token || !refresh_token) {
-        throw new Error("Invalid token response from GoHighLevel");
+        throw new Error("Invalid token response from GoHighLevel: Missing required tokens");
       }
       
       // Calculate token expiration date
