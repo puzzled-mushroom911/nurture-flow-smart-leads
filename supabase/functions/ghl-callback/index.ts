@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID");
 const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET");
 const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
-const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/ghl-callback";
+const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/oauth-callback";
 const FRONTEND_URL = "http://localhost:5173"; // This will need to be updated in production
 
 const corsHeaders = {
