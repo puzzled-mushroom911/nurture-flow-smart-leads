@@ -7,7 +7,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Fix: Try both possible environment variable names to maintain compatibility
 const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
 const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret");
-const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
+// Fix: Update to the correct OAuth token URL
+const GHL_TOKEN_URL = "https://marketplace.gohighlevel.com/oauth/token";
 const GHL_API_URL = "https://services.leadconnectorhq.com";
 const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
 const FRONTEND_URL = "http://localhost:5173"; // This will need to be updated in production

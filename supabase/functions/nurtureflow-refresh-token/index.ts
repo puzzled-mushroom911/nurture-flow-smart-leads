@@ -6,7 +6,8 @@ const SUPABASE_URL = "https://vxgvmmudspqwsaedcmsl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Z3ZtbXVkc3Bxd3NhZWRjbXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5ODk4MzgsImV4cCI6MjA1OTU2NTgzOH0.wSYR4wG-jL2ZjYsluabFRGQKqtajPFhWrqE8QAd0YXw";
 const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID");
 const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET");
-const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
+// Fix: Update to the correct OAuth token URL
+const GHL_TOKEN_URL = "https://marketplace.gohighlevel.com/oauth/token";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,16 +65,18 @@ serve(async (req) => {
     
     console.log("Refreshing token for installation:", installation_id);
 
-    // Refresh the token
+    // Fix: Update to use application/x-www-form-urlencoded content type
+    const formData = new URLSearchParams();
+    formData.append("client_id", GHL_CLIENT_ID);
+    formData.append("client_secret", GHL_CLIENT_SECRET);
+    formData.append("grant_type", "refresh_token");
+    formData.append("refresh_token", installation.refresh_token);
+
+    // Refresh the token with form-urlencoded content type
     const tokenResponse = await fetch(GHL_TOKEN_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: GHL_CLIENT_ID,
-        client_secret: GHL_CLIENT_SECRET,
-        grant_type: "refresh_token",
-        refresh_token: installation.refresh_token
-      })
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString()
     });
     
     if (!tokenResponse.ok) {
