@@ -39,17 +39,19 @@ serve(async (req) => {
 
     console.log(`Received callback with code: ${code}`);
     
-    // Exchange code for access token
+    // Fix: Change the token exchange to use application/x-www-form-urlencoded format
+    const formData = new URLSearchParams();
+    formData.append("client_id", GHL_CLIENT_ID);
+    formData.append("client_secret", GHL_CLIENT_SECRET);
+    formData.append("grant_type", "authorization_code");
+    formData.append("code", code);
+    formData.append("redirect_uri", REDIRECT_URI);
+    
+    // Exchange code for access token using form-urlencoded content type
     const tokenResponse = await fetch(GHL_TOKEN_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: GHL_CLIENT_ID,
-        client_secret: GHL_CLIENT_SECRET,
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: REDIRECT_URI
-      })
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString()
     });
     
     if (!tokenResponse.ok) {
