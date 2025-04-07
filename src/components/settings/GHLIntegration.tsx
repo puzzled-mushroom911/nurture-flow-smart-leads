@@ -7,14 +7,15 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, AlertCircle, ExternalLink, RefreshCw } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export default function GHLIntegration() {
   const { toast } = useToast();
   const location = useLocation();
-  const [integrationStatus, setIntegrationStatus] = useState<'none' | 'success' | 'error'>('none');
+  const [integrationStatus, setIntegrationStatus] = useState<'none' | 'success' | 'error' | 'loading'>('none');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
   
   // Parse query parameters on mount
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function GHLIntegration() {
   }, [location.search, toast]);
 
   // Get installations
-  const { data: installations, isLoading } = useQuery({
+  const { data: installations, isLoading, refetch } = useQuery({
     queryKey: ['ghl-installations'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,6 +54,8 @@ export default function GHLIntegration() {
   });
 
   const handleConnect = () => {
+    setIsConnecting(true);
+    setIntegrationStatus('loading');
     window.location.href = 'https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-auth';
   };
 
@@ -84,6 +87,16 @@ export default function GHLIntegration() {
             </AlertDescription>
           </Alert>
         )}
+
+        {integrationStatus === 'loading' && (
+          <Alert className="mb-4 bg-blue-50 border-blue-200">
+            <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+            <AlertTitle className="text-blue-800">Connecting...</AlertTitle>
+            <AlertDescription className="text-blue-700">
+              Please wait while we connect to your GoHighLevel account.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="space-y-6">
           {isLoading ? (
@@ -98,6 +111,7 @@ export default function GHLIntegration() {
                       <div className="font-medium">Location ID: {install.location_id}</div>
                       <div className="text-sm text-gray-500">Company ID: {install.company_id}</div>
                       <div className="text-xs text-gray-400">Connected: {new Date(install.created_at).toLocaleString()}</div>
+                      <div className="text-xs text-gray-400">Token Expires: {new Date(install.token_expires_at).toLocaleString()}</div>
                     </div>
                     <div className="flex items-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -139,9 +153,32 @@ export default function GHLIntegration() {
         >
           GoHighLevel Dashboard <ExternalLink className="ml-2 h-4 w-4" />
         </Button>
-        <Button onClick={handleConnect}>
-          {installations && installations.length > 0 ? "Connect Another Location" : "Connect GoHighLevel"}
-        </Button>
+        <div className="flex gap-2">
+          {installations && installations.length > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={() => refetch()}
+              className="flex items-center"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
+          <Button 
+            onClick={handleConnect}
+            disabled={isConnecting}
+          >
+            {isConnecting ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              installations && installations.length > 0 ? "Connect Another Location" : "Connect GoHighLevel"
+            )}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

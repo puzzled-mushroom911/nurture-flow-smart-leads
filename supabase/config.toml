@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.ghl-auth]
 verify_jwt = false
+
+[functions.ghl-callback]
+verify_jwt = false
