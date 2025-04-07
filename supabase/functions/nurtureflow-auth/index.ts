@@ -37,7 +37,9 @@ serve(async (req) => {
     
     // Join scopes with plus signs for URL parameter
     const scopesParam = scopes.join("+");
-    const authorizationUrl = `${GHL_AUTH_URL}?response_type=code&client_id=${GHL_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scopesParam}&state=${state}`;
+    
+    // Add debug parameters to help diagnose issues
+    const authorizationUrl = `${GHL_AUTH_URL}?response_type=code&client_id=${GHL_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scopesParam}&state=${state}&debug=true`;
     
     console.log(`Redirecting to GoHighLevel authorization: ${authorizationUrl}`);
     
@@ -46,7 +48,8 @@ serve(async (req) => {
       status: 302,
       headers: {
         ...corsHeaders,
-        "Location": authorizationUrl
+        "Location": authorizationUrl,
+        "Cache-Control": "no-cache, no-store" // Prevent caching issues
       }
     });
   } catch (error) {
