@@ -92,7 +92,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Button variant="sidebar" className="w-full justify-start" disabled>
+                  <Button variant="ghost" className="w-full justify-start" disabled>
                     <Lock className="h-5 w-5 mr-2" />
                     <span>Connect GHL</span>
                   </Button>
