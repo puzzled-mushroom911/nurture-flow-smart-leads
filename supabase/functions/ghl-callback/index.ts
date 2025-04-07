@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -8,7 +7,7 @@ const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID");
 const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET");
 const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
 const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/oauth-callback";
-const FRONTEND_URL = "http://localhost:5173"; // This will need to be updated in production
+const FRONTEND_URL = "https://preview--nurture-flow-smart-leads.lovable.app";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
