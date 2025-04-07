@@ -25,9 +25,19 @@ serve(async (req) => {
 
     const state = crypto.randomUUID();
     
-    // Fix: Update scopes to valid ones, without spaces between them
-    // Valid scopes from GHL documentation: locations/readonly, contacts, opportunities, conversations, campaigns
-    const authorizationUrl = `${GHL_AUTH_URL}?response_type=code&client_id=${GHL_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=locations/readonly+contacts+conversations+opportunities+campaigns&state=${state}`;
+    // Updated scopes to use the correct format with dots and slashes as provided
+    const scopes = [
+      "locations.readonly",
+      "conversations.readonly",
+      "conversations/message.write",
+      "contacts.write",
+      "opportunities.write",
+      "opportunities.readonly"
+    ];
+    
+    // Join scopes with plus signs for URL parameter
+    const scopesParam = scopes.join("+");
+    const authorizationUrl = `${GHL_AUTH_URL}?response_type=code&client_id=${GHL_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scopesParam}&state=${state}`;
     
     console.log(`Redirecting to GoHighLevel authorization: ${authorizationUrl}`);
     

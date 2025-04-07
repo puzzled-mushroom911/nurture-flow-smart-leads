@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.nurtureflow-refresh-token]
 verify_jwt = false
+
+[functions.ghl-auth]
+verify_jwt = false
