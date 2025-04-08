@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useLeads } from '@/hooks/useLeads';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, X, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { Check, X, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { toast } from '@/components/ui/use-toast';
 
 export const ApprovalQueue = () => {
   const {
@@ -18,26 +19,93 @@ export const ApprovalQueue = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  if (pendingMessages.isLoading) {
-    return <div>Loading...</div>;
-  }
+  const handleApprove = async (messageId: string) => {
+    try {
+      await approveMessage.mutateAsync(messageId);
+      toast({
+        title: "Message approved",
+        description: "The message has been approved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve message. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  if (pendingMessages.isError) {
-    return <div>Error loading messages</div>;
-  }
+  const handleReject = async (messageId: string) => {
+    try {
+      await rejectMessage.mutateAsync(messageId);
+      toast({
+        title: "Message rejected",
+        description: "The message has been rejected successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject message. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const messages = pendingMessages.data || [];
+  const handleSchedule = async (messageId: string) => {
+    if (!selectedDate) return;
 
-  const handleSchedule = (messageId: string) => {
-    if (selectedDate) {
-      scheduleMessage.mutate({
+    try {
+      await scheduleMessage.mutateAsync({
         messageId,
         scheduledFor: selectedDate
       });
       setSelectedMessage(null);
       setSelectedDate(undefined);
+      toast({
+        title: "Message scheduled",
+        description: `The message has been scheduled for ${format(selectedDate, 'PPP')}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to schedule message. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (pendingMessages.isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Approval</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading messages...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (pendingMessages.isError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Approval</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-destructive">
+            Error loading messages. Please try refreshing the page.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const messages = pendingMessages.data || [];
 
   return (
     <Card>
@@ -63,7 +131,7 @@ export const ApprovalQueue = () => {
                   </div>
                   <div className="text-sm">{message.content}</div>
                   <div className="text-xs text-muted-foreground">
-                    Created {format(new Date(message.createdAt), 'MMM d, yyyy')}
+                    Created {format(parseISO(message.created_at), 'PPP')}
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -84,18 +152,21 @@ export const ApprovalQueue = () => {
                         size="sm"
                         disabled={scheduleMessage.isPending}
                       >
-                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        {scheduleMessage.isPending && selectedMessage === message.id ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <CalendarIcon className="h-4 w-4 mr-1" />
+                        )}
                         Schedule
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end" role="dialog">
+                    <PopoverContent className="w-auto p-0" align="end">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
                         onSelect={setSelectedDate}
                         initialFocus
                         disabled={(date) => {
-                          // Disable past dates
                           const today = new Date();
                           today.setHours(0, 0, 0, 0);
                           return date < today;
@@ -107,7 +178,11 @@ export const ApprovalQueue = () => {
                           onClick={() => handleSchedule(message.id)}
                           disabled={!selectedDate || scheduleMessage.isPending}
                         >
-                          Confirm
+                          {scheduleMessage.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            'Confirm'
+                          )}
                         </Button>
                       </div>
                     </PopoverContent>
@@ -115,19 +190,27 @@ export const ApprovalQueue = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => rejectMessage.mutate(message.id)}
+                    onClick={() => handleReject(message.id)}
                     disabled={rejectMessage.isPending}
                   >
-                    <X className="h-4 w-4 mr-1" />
+                    {rejectMessage.isPending && rejectMessage.variables === message.id ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <X className="h-4 w-4 mr-1" />
+                    )}
                     Reject
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => approveMessage.mutate(message.id)}
+                    onClick={() => handleApprove(message.id)}
                     disabled={approveMessage.isPending}
                   >
-                    <Check className="h-4 w-4 mr-1" />
+                    {approveMessage.isPending && approveMessage.variables === message.id ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-1" />
+                    )}
                     Approve
                   </Button>
                 </div>

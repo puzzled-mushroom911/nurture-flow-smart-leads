@@ -1,16 +1,24 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Upload, Book } from "lucide-react";
+import { Search, Upload, Book, Plus } from "lucide-react";
 import { useState } from "react";
 import { DocumentUploader } from "@/components/knowledge/DocumentUploader";
 import { DocumentList } from "@/components/knowledge/DocumentList";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { DocumentUpload } from '@/components/knowledge/DocumentUpload'
 
 const Knowledge = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showUploader, setShowUploader] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +38,27 @@ const Knowledge = () => {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button 
-              variant={showUploader ? "secondary" : "outline"} 
-              size="sm"
-              onClick={() => setShowUploader(!showUploader)}
-            >
-              <Upload className="h-4 w-4 mr-1" /> 
-              {showUploader ? "Cancel Upload" : "Upload Document"}
-            </Button>
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Upload Document
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Document</DialogTitle>
+                  <DialogDescription>
+                    Upload a document to your knowledge base. We support PDF, DOC, DOCX, and TXT files.
+                  </DialogDescription>
+                </DialogHeader>
+                <DocumentUpload 
+                  onUploadComplete={() => {
+                    setIsUploadOpen(false)
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -54,11 +75,6 @@ const Knowledge = () => {
           </Button>
         </form>
         
-        {/* Document Uploader (conditional) */}
-        {showUploader && (
-          <DocumentUploader />
-        )}
-
         {/* Main Content */}
         <Card>
           <CardHeader>

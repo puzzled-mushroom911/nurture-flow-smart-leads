@@ -1,5 +1,45 @@
 # Nurture Flow Smart Leads
 
+## 🚀 Quick Start - Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/nurture-flow-smart-leads.git
+   cd nurture-flow-smart-leads
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or if you use yarn
+   yarn install
+   ```
+
+3. **Set up environment variables**
+   - Copy the `.env.example` file to `.env` (if it doesn't exist)
+   - Update the necessary environment variables
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   # or if you use yarn
+   yarn dev
+   ```
+
+5. **Access the application**
+   - Open your browser and navigate to `http://localhost:5173`
+   - The app will automatically reload if you change any of the source files
+
+## 🔧 Available Scripts
+
+- `npm run dev` - Starts the development server
+- `npm run build` - Builds the app for production
+- `npm run preview` - Locally preview production build
+- `npm run lint` - Run ESLint to check code quality
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+
 A powerful lead management and document processing platform that integrates with GoHighLevel CRM to provide intelligent lead nurturing capabilities through document analysis and automated workflows.
 
 ## Features
@@ -153,8 +193,6 @@ supabase/
 - Event processing status
 - Audit trail for system events
 
-<<<<<<< Updated upstream
-=======
 #### users
 - User information and settings
 - Subscription status and tier
@@ -185,7 +223,6 @@ supabase/
 - User-specific usage metrics
 - Metric type, value, and timestamp
 
->>>>>>> Stashed changes
 ## API Endpoints
 
 ### GoHighLevel Integration
@@ -250,8 +287,6 @@ For support:
 ---
 
 **Note**: Ensure proper security measures and testing before deploying to production.
-<<<<<<< Updated upstream
-=======
 
 ## Example Lead Processing Service Structure
 
@@ -531,4 +566,3 @@ const IntegrationDashboard: React.FC<IntegrationDashboardProps> = ({ userId }) =
     </div>
   );
 };
->>>>>>> Stashed changes

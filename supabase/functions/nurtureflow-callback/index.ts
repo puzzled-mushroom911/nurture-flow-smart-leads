@@ -167,7 +167,8 @@ serve(async (req) => {
       token_expires_at.setSeconds(token_expires_at.getSeconds() + expires_in);
       
       // Store the installation in Supabase
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY);
       
       console.log("Storing installation in database...");
       const { data, error } = await supabase
