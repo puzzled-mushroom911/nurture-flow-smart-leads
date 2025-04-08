@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "react-router-dom";
@@ -8,10 +7,12 @@ import ConnectedLocations from "./integration/ConnectedLocations";
 import IntegrationSteps from "./integration/IntegrationSteps";
 import { ErrorDialog } from "./integration/ErrorDialog";
 import { ConnectButtons } from "./integration/ConnectButtons";
+import { useGHL } from "@/hooks/useGHL";
 
 export default function GHLIntegration() {
   const { toast } = useToast();
   const location = useLocation();
+  const { connectGHL, connectionStatus } = useGHL();
   const [integrationStatus, setIntegrationStatus] = useState<'none' | 'success' | 'error' | 'loading'>('none');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -44,7 +45,7 @@ export default function GHLIntegration() {
   const handleConnect = () => {
     setIsConnecting(true);
     setIntegrationStatus('loading');
-    window.location.href = 'https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-auth';
+    connectGHL();
   };
 
   return (

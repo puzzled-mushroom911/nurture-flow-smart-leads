@@ -1,8 +1,6 @@
-
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useGHL } from "@/hooks/useGHL";
 
 interface ConnectButtonsProps {
   isConnecting: boolean;
@@ -10,17 +8,7 @@ interface ConnectButtonsProps {
 }
 
 export function ConnectButtons({ isConnecting, onConnect }: ConnectButtonsProps) {
-  const { data: installations } = useQuery({
-    queryKey: ['ghl-installations'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ghl_installations')
-        .select('*');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  const { installations } = useGHL();
 
   return (
     <div className="flex justify-between w-full">
@@ -42,7 +30,7 @@ export function ConnectButtons({ isConnecting, onConnect }: ConnectButtonsProps)
             Connecting...
           </>
         ) : (
-          installations && installations.length > 0 ? "Connect Another Location" : "Connect GoHighLevel"
+          installations.data && installations.data.length > 0 ? "Connect Another Location" : "Connect GoHighLevel"
         )}
       </Button>
     </div>
