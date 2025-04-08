@@ -40,6 +40,69 @@
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Run tests with coverage report
 
+## 📋 Project Tasks
+
+### High Priority
+
+#### GoHighLevel Integration
+- [ ] Test OAuth flow with real credentials
+- [ ] Implement token refresh mechanism
+- [ ] Set up webhook reception and processing
+- [ ] Test integration end-to-end
+
+#### Lead Synchronization Engine
+- [ ] Create bidirectional sync between GoHighLevel contacts and local leads
+- [ ] Implement scheduled sync jobs
+- [ ] Build conflict resolution logic
+- [ ] Add error handling and retry mechanisms
+
+#### Message/Campaign Integration
+- [ ] Connect approved messages to GoHighLevel campaigns
+- [ ] Implement message sending capability
+- [ ] Add campaign performance tracking
+- [ ] Set up message templates system
+
+### Medium Priority
+
+#### Lead Scoring System
+- [ ] Implement scoring algorithm based on document analysis
+- [ ] Create rules engine for automated scoring
+- [ ] Build score visualization dashboard
+- [ ] Add manual score adjustment capability
+
+#### Document Processing
+- [ ] Complete document upload system
+- [ ] Implement intelligent document analysis
+- [ ] Connect document insights to lead profiles
+- [ ] Add batch processing capabilities
+
+#### User Management & Permissions
+- [ ] Set up role-based access control
+- [ ] Create team management interface
+- [ ] Configure proper data isolation
+- [ ] Implement audit logging
+
+### Lower Priority
+
+#### Reporting & Analytics
+- [ ] Create performance dashboards
+- [ ] Implement export functionality
+- [ ] Set up scheduled report generation
+- [ ] Add custom report builder
+
+#### UI/UX Improvements
+- [ ] Ensure consistent styling
+- [ ] Optimize mobile responsiveness
+- [ ] Add loading states
+- [ ] Improve error handling
+- [ ] Implement progressive web app features
+
+#### Advanced Settings
+- [ ] Create integration behavior options
+- [ ] Implement notification preferences
+- [ ] Add system maintenance tools
+- [ ] Create backup and restore functionality
+
 A powerful lead management and document processing platform that integrates with GoHighLevel CRM to provide intelligent lead nurturing capabilities through document analysis and automated workflows.
 
 ## Features
@@ -73,6 +136,27 @@ A powerful lead management and document processing platform that integrates with
 - Secure token management and refresh mechanisms
 - Protected API endpoints with proper validation
 - Role-based access control for team management
+
+## Roadmap
+
+Our development roadmap outlines the planned features and improvements:
+
+### Short-term (1-3 months)
+- Enhanced AI-powered lead scoring system
+- Automated follow-up sequence builder
+- Advanced analytics dashboard with custom reporting
+- Mobile responsive design improvements
+
+### Mid-term (3-6 months)
+- Multi-language Model support
+- Post Trained LLM Utilization
+- Advanced document OCR and analysis
+
+### Long-term (6+ months)
+- AI-powered sales conversation insights
+- Predictive lead behavior analytics
+- Real-time collaboration features
+- Enterprise-grade security enhancements
 
 ## Tech Stack
 
