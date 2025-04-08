@@ -49,14 +49,16 @@ serve(async (req) => {
     try {
       const tokenResponse = await fetch(GHL_TOKEN_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: { 
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
           client_id: GHL_CLIENT_ID,
           client_secret: GHL_CLIENT_SECRET,
           grant_type: "authorization_code",
           code,
           redirect_uri: REDIRECT_URI
-        })
+        }).toString()
       });
       
       console.log("Token response status:", tokenResponse.status);
