@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -50,13 +49,13 @@ serve(async (req) => {
       const tokenResponse = await fetch(GHL_TOKEN_URL, {
         method: "POST",
         headers: { 
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/x-www-form-urlencoded"
         },
         body: new URLSearchParams({
           client_id: GHL_CLIENT_ID,
           client_secret: GHL_CLIENT_SECRET,
           grant_type: "authorization_code",
-          code,
+          code: code,
           redirect_uri: REDIRECT_URI
         }).toString()
       });

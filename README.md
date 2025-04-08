@@ -153,6 +153,39 @@ supabase/
 - Event processing status
 - Audit trail for system events
 
+<<<<<<< Updated upstream
+=======
+#### users
+- User information and settings
+- Subscription status and tier
+- Integration credentials
+
+#### user_integrations
+- User-specific integration configurations
+- Integration type and provider
+- Credentials and last sync timestamp
+
+#### user_knowledge_base
+- User-specific knowledge base
+- Document name, type, content, metadata, and timestamps
+
+#### user_knowledge_embeddings
+- User-specific knowledge base embeddings
+- Document ID, chunk index, content chunk, embedding, and metadata
+
+#### user_contacts
+- User-specific contacts
+- User ID, GoHighLevel contact ID, contact data, and timestamps
+
+#### user_contact_embeddings
+- User-specific contact embeddings
+- User ID, contact ID, embedding, and last updated timestamp
+
+#### user_usage_metrics
+- User-specific usage metrics
+- Metric type, value, and timestamp
+
+>>>>>>> Stashed changes
 ## API Endpoints
 
 ### GoHighLevel Integration
@@ -217,3 +250,285 @@ For support:
 ---
 
 **Note**: Ensure proper security measures and testing before deploying to production.
+<<<<<<< Updated upstream
+=======
+
+## Example Lead Processing Service Structure
+
+```typescript
+interface LeadAssessment {
+  qualityScore: number;
+  recommendedFollowUpDate: Date;
+  categories: string[];
+  customTags: string[];
+  opportunityStatus: string;
+}
+
+class LeadIntelligenceService {
+  async assessLead(leadData: any): Promise<LeadAssessment> {
+    // LLM call to analyze lead data
+    // Return structured assessment
+  }
+  
+  async generatePersonalizedMessage(lead: any, context: string): Promise<string> {
+    // Prompt engineering for customized outreach
+  }
+}
+```
+
+## Example Workflow Controller
+
+```typescript
+class WorkflowController {
+  async createFollowUpAction(leadId: string, messageTemplate: string): Promise<string> {
+    // Generate message with LLM
+    // Queue for human approval
+    // Submit to GHL on approval
+  }
+  
+  async getApprovalQueue(userId: string): Promise<PendingAction[]> {
+    // Return actions awaiting human approval
+  }
+}
+```
+
+## Example Search Service
+
+```typescript
+class SemanticSearchService {
+  async findLeadsByQuery(query: string): Promise<Lead[]> {
+    // Convert query to embedding
+    // Perform similarity search
+    // Return matching leads
+  }
+}
+```
+
+class LLMService {
+  async sendPrompt(prompt: string, context: any = {}): Promise<string> {
+    // Format prompt with MCP standards
+    // Call appropriate LLM
+    // Process and validate response
+    return response;
+  }
+}
+
+async function processNewLead(contactId: string) {
+  // 1. Extract contact data from GHL
+  const contactData = await ghlService.getContactData(contactId, currentToken);
+  
+  // 2. Transform data for LLM processing
+  const processableData = transformContactData(contactData);
+  
+  // 3. Run LLM analysis
+  const analysis = await llmService.assessLead(processableData);
+  
+  // 4. Store results in Supabase
+  await database.storeLeadAnalysis(contactId, analysis);
+  
+  // 5. Update GHL with new tags/categorization (optional)
+  if (settings.autoUpdateGHL) {
+    await ghlService.updateContact(contactId, {
+      tags: analysis.recommendedTags
+    });
+  }
+}
+
+class ContactSyncService {
+  private db: SupabaseClient;
+  private embedder: EmbeddingService;
+  
+  constructor(db: SupabaseClient, embedder: EmbeddingService) {
+    this.db = db;
+    this.embedder = embedder;
+  }
+  
+  async syncContact(ghlContactId: string, accessToken: string): Promise<string> {
+    // 1. Fetch complete contact data from GHL
+    const contactData = await this.fetchContactFromGHL(ghlContactId, accessToken);
+    
+    // 2. Store/update in relational database
+    const contactUuid = await this.storeContactData(contactData);
+    
+    // 3. Generate embeddings and store in vector database
+    await this.generateAndStoreEmbeddings(contactUuid, contactData);
+    
+    return contactUuid;
+  }
+  
+  private async fetchContactFromGHL(contactId: string, token: string): Promise<any> {
+    // Fetch complete contact data with all fields, tags, opportunities, etc.
+    // Return full JSON response
+  }
+  
+  private async storeContactData(contactData: any): Promise<string> {
+    // Insert/update contact in primary table
+    const { data, error } = await this.db
+      .from('contacts')
+      .upsert({
+        ghl_contact_id: contactData.id,
+        first_name: contactData.firstName,
+        last_name: contactData.lastName,
+        email: contactData.email,
+        phone: contactData.phone,
+        raw_data: contactData
+      }, { 
+        onConflict: 'ghl_contact_id',
+        returning: 'id'
+      });
+    
+    const contactUuid = data[0].id;
+    
+    // Process and store custom fields
+    await this.storeCustomFields(contactUuid, contactData.customFields);
+    
+    // Process and store tags
+    await this.storeTags(contactUuid, contactData.tags);
+    
+    // Process communications, opportunities, etc.
+    
+    return contactUuid;
+  }
+  
+  private async generateAndStoreEmbeddings(contactUuid: string, contactData: any): Promise<void> {
+    // Create a text representation of the contact for embedding
+    const contactText = this.createEmbeddingText(contactData);
+    
+    // Generate embedding using your chosen model (OpenAI, etc.)
+    const embedding = await this.embedder.generateEmbedding(contactText);
+    
+    // Store the embedding
+    await this.db
+      .from('contact_embeddings')
+      .upsert({
+        contact_id: contactUuid,
+        embedding: embedding,
+        embedding_model: this.embedder.getModelName()
+      }, {
+        onConflict: 'contact_id',
+        returning: 'id'
+      });
+  }
+  
+  private createEmbeddingText(contactData: any): string {
+    // Combine relevant fields into a comprehensive text representation
+    // This determines what will be semantically searchable
+    return `
+      Name: ${contactData.firstName} ${contactData.lastName}
+      Email: ${contactData.email}
+      Phone: ${contactData.phone}
+      Custom Fields: ${this.formatCustomFields(contactData.customFields)}
+      Tags: ${contactData.tags?.join(', ')}
+      Notes: ${this.extractNotes(contactData)}
+      Opportunities: ${this.formatOpportunities(contactData.opportunities)}
+      Communication History: ${this.summarizeCommunications(contactData.communications)}
+    `;
+  }
+}
+
+interface IntegrationConfig {
+  type: string;
+  provider: string;
+  credentials: any;
+  settings: any;
+}
+
+class IntegrationManager {
+  async addIntegration(userId: string, config: IntegrationConfig): Promise<void> {
+    // Validate and store integration credentials
+    await this.validateCredentials(config);
+    await this.storeIntegrationConfig(userId, config);
+    await this.initializeIntegration(userId, config);
+  }
+
+  private async initializeIntegration(userId: string, config: IntegrationConfig) {
+    switch(config.type) {
+      case 'calendar':
+        await this.setupCalendarSync(userId, config);
+        break;
+      case 'crm':
+        await this.setupCRMSync(userId, config);
+        break;
+      case 'marketing':
+        await this.setupMarketingPlatform(userId, config);
+        break;
+    }
+  }
+}
+
+class UserKnowledgeManager {
+  constructor(
+    private userId: string,
+    private db: SupabaseClient,
+    private embedder: EmbeddingService
+  ) {}
+
+  async uploadDocument(file: File, metadata: any): Promise<string> {
+    // 1. Store document
+    const docId = await this.storeDocument(file, metadata);
+    
+    // 2. Process and chunk document
+    const chunks = await this.processDocument(file);
+    
+    // 3. Generate and store embeddings
+    await this.storeEmbeddings(docId, chunks);
+    
+    return docId;
+  }
+
+  async searchKnowledgeBase(query: string): Promise<SearchResult[]> {
+    // Generate query embedding
+    const queryEmbedding = await this.embedder.generateEmbedding(query);
+    
+    // Search user's knowledge base only
+    return await this.db.rpc('search_user_knowledge', {
+      user_id: this.userId,
+      query_embedding: queryEmbedding,
+      match_threshold: 0.7,
+      match_count: 10
+    });
+  }
+}
+
+// Middleware to ensure data isolation
+const ensureUserAccess = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user.id;
+  const resourceId = req.params.resourceId;
+
+  const hasAccess = await checkUserResourceAccess(userId, resourceId);
+  if (!hasAccess) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+};
+
+// Database policies in Supabase
+const setupRowLevelSecurity = async () => {
+  await db.rpc('setup_rls_policies', {
+    tables: [
+      'user_knowledge_base',
+      'user_contacts',
+      'user_knowledge_embeddings',
+      'user_contact_embeddings'
+    ]
+  });
+};
+
+interface IntegrationDashboardProps {
+  userId: string;
+}
+
+const IntegrationDashboard: React.FC<IntegrationDashboardProps> = ({ userId }) => {
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  
+  // Integration management UI
+  return (
+    <div>
+      <IntegrationsList integrations={integrations} />
+      <AddIntegrationForm onAdd={handleAddIntegration} />
+      <IntegrationSettings />
+      <SyncStatus />
+    </div>
+  );
+};
+>>>>>>> Stashed changes
