@@ -1,6 +1,22 @@
-
-import { Bell, ChevronDown, Menu } from "lucide-react";
+import React from "react";
+import { 
+  Bell, 
+  Settings, 
+  User, 
+  Lock,
+  LogOut
+} from "lucide-react";
+import {
+  Navbar,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+} from "@/components/ui/navbar";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useGHL } from "@/hooks/useGHL";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,81 +25,117 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
-interface NavBarProps {
-  toggleSidebar: () => void;
-}
+export function NavBar() {
+  const navigate = useNavigate();
+  const { connectGHL, installations } = useGHL();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-export function NavBar({ toggleSidebar }: NavBarProps) {
+  const handleConnectGHL = () => {
+    connectGHL();
+    setIsMenuOpen(false);
+  };
+
+  const handleSignOut = () => {
+    // TODO: Implement sign out logic
+    console.log("Sign out clicked");
+    setIsMenuOpen(false);
+  };
+
+  const handleSettings = () => {
+    navigate("/settings");
+    setIsMenuOpen(false);
+  };
+
   return (
-    <header className="border-b bg-background">
-      <div className="flex h-16 items-center px-4">
-        <div className="md:hidden">
-          <SidebarTrigger>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle sidebar</span>
-            </Button>
-          </SidebarTrigger>
-        </div>
-        <div className="flex items-center justify-between flex-1">
-          <div>
-            <h1 className="text-xl font-semibold">Nurture Flow</h1>
-            <p className="text-sm text-muted-foreground">AI-Powered Lead Nurturing</p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" className="hidden md:flex">
-              <Badge variant="secondary" className="mr-2">DEMO</Badge>
-              Connect GoHighLevel
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <span>5 messages need approval</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>3 leads were analyzed</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>AD</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:inline-flex">Admin</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-    </header>
+    <Navbar>
+      <NavbarContent>
+        <NavbarMenuToggle
+          className="sm:hidden"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        />
+      </NavbarContent>
+
+      <NavbarContent className="hidden sm:flex gap-2">
+        <NavbarItem>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleConnectGHL}
+            disabled={installations.isLoading}
+          >
+            <Lock className="h-5 w-5" />
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <Button variant="ghost" size="icon">
+            <Bell className="h-5 w-5" />
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSettings}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarMenu isOpen={isMenuOpen}>
+        <NavbarMenuItem>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start"
+            onClick={handleConnectGHL}
+            disabled={installations.isLoading}
+          >
+            <Lock className="mr-2 h-5 w-5" />
+            {installations.data && installations.data.length > 0 
+              ? "Connect Another Location" 
+              : "Connect GoHighLevel"}
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button variant="ghost" className="w-full justify-start">
+            <Bell className="mr-2 h-5 w-5" />
+            Notifications
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start"
+            onClick={handleSettings}
+          >
+            <Settings className="mr-2 h-5 w-5" />
+            Settings
+          </Button>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start"
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-5 w-5" />
+            Sign Out
+          </Button>
+        </NavbarMenuItem>
+      </NavbarMenu>
+    </Navbar>
   );
 }

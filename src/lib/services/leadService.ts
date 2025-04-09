@@ -27,4 +27,14 @@ export const leadService = {
   scheduleMessage: async (messageId: string, scheduledFor: Date): Promise<void> => {
     return supabaseService.scheduleMessage(messageId, scheduledFor);
   },
+
+  editMessage: async (messageId: string, content: string): Promise<void> => {
+    return supabaseService.editMessage(messageId, content);
+  },
+
+  generateMessages: async (): Promise<void> => {
+    // This will be implemented in the backend
+    // For now, we'll just return a resolved promise
+    return Promise.resolve();
+  }
 }; 

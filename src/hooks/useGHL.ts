@@ -8,14 +8,16 @@ export const useGHL = () => {
   const connectionStatus = useQuery({
     queryKey: ['ghl-connection'],
     queryFn: () => ghlService.getConnectionStatus(),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 30 * 1000, // Cache for 30 seconds (reduced from 5 minutes)
+    retry: 1, // Only retry once if there's an error
   });
 
   // Query to get installations
   const installations = useQuery({
     queryKey: ['ghl-installations'],
     queryFn: () => ghlService.getInstallations(),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 30 * 1000, // Cache for 30 seconds (reduced from 5 minutes)
+    retry: 1, // Only retry once if there's an error
   });
 
   // Mutation to disconnect an integration
@@ -28,6 +30,12 @@ export const useGHL = () => {
     },
   });
 
+  // Function to manually refresh connection status
+  const refreshConnection = () => {
+    queryClient.invalidateQueries({ queryKey: ['ghl-connection'] });
+    queryClient.invalidateQueries({ queryKey: ['ghl-installations'] });
+  };
+
   // Function to start the OAuth flow
   const connectGHL = () => {
     ghlService.startOAuthFlow();
@@ -38,5 +46,6 @@ export const useGHL = () => {
     installations,
     disconnectIntegration,
     connectGHL,
+    refreshConnection,
   };
 }; 

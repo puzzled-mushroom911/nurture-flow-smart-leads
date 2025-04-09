@@ -4,8 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 const SUPABASE_URL = "https://vxgvmmudspqwsaedcmsl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Z3ZtbXVkc3Bxd3NhZWRjbXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5ODk4MzgsImV4cCI6MjA1OTU2NTgzOH0.wSYR4wG-jL2ZjYsluabFRGQKqtajPFhWrqE8QAd0YXw";
 // Fix: Try both possible environment variable names to maintain compatibility
-const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
-const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret");
+const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID") || "67f3402bb0c46a1b8d090311-m96hrsry";
+const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret") || "f232bf2c-a0e9-4af4-8f63-0cbc7a074db1";
 // IMPORTANT: This is the correct OAuth token URL for GoHighLevel
 const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
 const GHL_API_URL = "https://services.leadconnectorhq.com";

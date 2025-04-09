@@ -1,4 +1,3 @@
-
 import {
   LineChart,
   Line,
@@ -10,19 +9,66 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from '@tanstack/react-query';
+import { leadService } from '@/lib/services/leadService';
+import { Loader2 } from 'lucide-react';
 
-// Mock data for usage stats
-const usageData = [
-  { day: "Mon", messages: 12, analysis: 24 },
-  { day: "Tue", messages: 19, analysis: 37 },
-  { day: "Wed", messages: 15, analysis: 25 },
-  { day: "Thu", messages: 27, analysis: 43 },
-  { day: "Fri", messages: 32, analysis: 49 },
-  { day: "Sat", messages: 8, analysis: 16 },
-  { day: "Sun", messages: 5, analysis: 11 }
-];
+interface UsageData {
+  day: string;
+  messages: number;
+  analysis: number;
+}
 
 export function UsageChart() {
+  const { data: usageData, isLoading, error } = useQuery({
+    queryKey: ['usage-stats'],
+    queryFn: async () => {
+      // In a real implementation, this would come from your backend
+      // For now, we'll generate some sample data based on the current date
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      
+      return days.map((day, index) => ({
+        day,
+        messages: Math.floor(Math.random() * 50),
+        analysis: Math.floor(Math.random() * 100)
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px]">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading usage data...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center h-[300px] flex items-center justify-center text-destructive">
+            Error loading usage data. Please try refreshing the page.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

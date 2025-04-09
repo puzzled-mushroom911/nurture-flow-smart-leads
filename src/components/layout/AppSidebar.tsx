@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   BarChart3, 
@@ -22,7 +21,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useGHL } from "@/hooks/useGHL";
 
 // Menu items for the sidebar
 const navigationItems = [
@@ -54,6 +54,18 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
+  const navigate = useNavigate();
+  const { connectGHL, installations } = useGHL();
+
+  const handleConnectGHL = () => {
+    connectGHL();
+  };
+
+  const handleSignOut = () => {
+    // TODO: Implement sign out logic
+    console.log("Sign out clicked");
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -92,9 +104,18 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Button variant="ghost" className="w-full justify-start" disabled>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start" 
+                    onClick={handleConnectGHL}
+                    disabled={installations.isLoading}
+                  >
                     <Lock className="h-5 w-5 mr-2" />
-                    <span>Connect GHL</span>
+                    <span>
+                      {installations.data && installations.data.length > 0 
+                        ? "Connect Another Location" 
+                        : "Connect GoHighLevel"}
+                    </span>
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -105,7 +126,11 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <div className="p-4">
-          <Button variant="outline" className="w-full" disabled>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={handleSignOut}
+          >
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>

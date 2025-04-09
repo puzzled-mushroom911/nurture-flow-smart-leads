@@ -1,14 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { Lead, Message, MessageWithLead } from '../types';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const supabaseService = {
   // Lead operations
@@ -90,6 +81,27 @@ export const supabaseService = {
         updated_at: new Date().toISOString()
       })
       .eq('id', messageId);
+
+    if (error) throw error;
+  },
+
+  async editMessage(messageId: string, content: string): Promise<void> {
+    const { error } = await supabase
+      .from('messages')
+      .update({ 
+        content,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', messageId);
+
+    if (error) throw error;
+  },
+
+  async generateMessages(): Promise<void> {
+    // Call the Supabase function to generate messages
+    const { error } = await supabase.functions.invoke('generate-messages', {
+      body: { action: 'generate' }
+    });
 
     if (error) throw error;
   }

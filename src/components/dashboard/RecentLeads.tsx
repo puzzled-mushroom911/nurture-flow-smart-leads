@@ -1,50 +1,52 @@
-
 import { User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  status: "high" | "medium" | "low";
-  lastActivity: string;
-}
-
-// Mock data for recent leads
-const recentLeads: Lead[] = [
-  {
-    id: "1",
-    name: "Jessica Parker",
-    email: "j.parker@example.com",
-    status: "high",
-    lastActivity: "Viewed pricing page",
-  },
-  {
-    id: "2",
-    name: "David Williams",
-    email: "d.williams@company.co",
-    status: "medium",
-    lastActivity: "Downloaded whitepaper",
-  },
-  {
-    id: "3",
-    name: "Alex Johnson",
-    email: "alex@startupinc.com",
-    status: "high",
-    lastActivity: "Booked a demo",
-  },
-  {
-    id: "4",
-    name: "Lisa Rodriguez",
-    email: "lisa.r@enterprise.org",
-    status: "low",
-    lastActivity: "Opened email",
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { leadService } from '@/lib/services/leadService';
+import { Lead } from '@/lib/types';
+import { format } from 'date-fns';
 
 export function RecentLeads() {
+  const { data: leads, isLoading, error } = useQuery({
+    queryKey: ['recent-leads'],
+    queryFn: () => leadService.getLeads(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Leads</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="ml-2">Loading leads...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Leads</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-destructive">
+            Error loading leads. Please try refreshing the page.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const recentLeads = leads?.slice(0, 5) || [];
+
   return (
     <Card>
       <CardHeader>
@@ -60,28 +62,35 @@ export function RecentLeads() {
               <div className="flex items-center space-x-3">
                 <Avatar>
                   <AvatarFallback className="bg-muted">
-                    {lead.name.split(" ").map(n => n[0]).join("")}
+                    {[lead.first_name, lead.last_name]
+                      .filter(Boolean)
+                      .map(n => n?.[0])
+                      .join("") || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{lead.name}</p>
-                  <p className="text-xs text-muted-foreground">{lead.email}</p>
+                  <p className="text-sm font-medium">
+                    {[lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown Contact"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{lead.email || "No email"}</p>
                 </div>
               </div>
               <div className="text-right">
                 <Badge 
                   variant="outline"
                   className={
-                    lead.status === "high" 
+                    lead.status === "qualified" 
                       ? "bg-success/20 text-success border-success/30" 
-                      : lead.status === "medium" 
+                      : lead.status === "contacted" 
                         ? "bg-warning/20 text-warning border-warning/30"
                         : "bg-muted text-muted-foreground"
                   }
                 >
-                  {lead.status === "high" ? "High Intent" : lead.status === "medium" ? "Medium Intent" : "Low Intent"}
+                  {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
                 </Badge>
-                <p className="text-xs text-muted-foreground mt-1">{lead.lastActivity}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Added {format(new Date(lead.created_at), 'MMM d, yyyy')}
+                </p>
               </div>
             </div>
           ))}

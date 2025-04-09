@@ -5,33 +5,30 @@ import { MessageWithLead } from '@/lib/types';
 export const useLeads = () => {
   const queryClient = useQueryClient();
 
-  // Combined query for all messages
-  const allMessages = useQuery({
-    queryKey: ['messages'],
-    queryFn: () => leadService.getMessages(),
+  // Separate queries for each message status
+  const pendingMessages = useQuery({
+    queryKey: ['messages', 'pending'],
+    queryFn: () => leadService.getMessages('pending'),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Derived states from the main query
-  const pendingMessages = {
-    ...allMessages,
-    data: allMessages.data?.filter(m => m.status === 'pending'),
-  };
+  const scheduledMessages = useQuery({
+    queryKey: ['messages', 'scheduled'],
+    queryFn: () => leadService.getMessages('scheduled'),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const scheduledMessages = {
-    ...allMessages,
-    data: allMessages.data?.filter(m => m.status === 'scheduled'),
-  };
+  const sentMessages = useQuery({
+    queryKey: ['messages', 'sent'],
+    queryFn: () => leadService.getMessages('sent'),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const sentMessages = {
-    ...allMessages,
-    data: allMessages.data?.filter(m => m.status === 'sent'),
-  };
-
-  const rejectedMessages = {
-    ...allMessages,
-    data: allMessages.data?.filter(m => m.status === 'rejected'),
-  };
+  const rejectedMessages = useQuery({
+    queryKey: ['messages', 'rejected'],
+    queryFn: () => leadService.getMessages('rejected'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Mutations
   const approveMessage = useMutation({
@@ -56,6 +53,22 @@ export const useLeads = () => {
     },
   });
 
+  const generateMessages = useMutation({
+    mutationFn: () => leadService.generateMessages(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    },
+  });
+
+  const refreshMessages = useMutation({
+    mutationFn: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['messages', 'pending'] }),
+      queryClient.invalidateQueries({ queryKey: ['messages', 'scheduled'] }),
+      queryClient.invalidateQueries({ queryKey: ['messages', 'sent'] }),
+      queryClient.invalidateQueries({ queryKey: ['messages', 'rejected'] }),
+    ]),
+  });
+
   return {
     pendingMessages,
     scheduledMessages,
@@ -64,5 +77,7 @@ export const useLeads = () => {
     approveMessage,
     rejectMessage,
     scheduleMessage,
+    generateMessages,
+    refreshMessages,
   };
 }; 

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CheckCircle, RefreshCw, Trash2 } from "lucide-react";
+import { CheckCircle, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { useGHL } from "@/hooks/useGHL";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -8,24 +8,51 @@ interface ConnectedLocationsProps {
 }
 
 export default function ConnectedLocations({ integrationStatus }: ConnectedLocationsProps) {
-  const { installations, disconnectIntegration } = useGHL();
+  const { connectionStatus, installations, disconnectIntegration, refreshConnection } = useGHL();
 
-  if (installations.isLoading) {
-    return <div className="text-sm text-gray-500">Loading integration status...</div>;
+  // If both queries are loading, show loading state
+  if (connectionStatus.isLoading || installations.isLoading) {
+    return (
+      <div className="text-center py-4">
+        <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-primary" />
+        <div className="text-sm text-gray-500">Loading integration status...</div>
+      </div>
+    );
   }
 
-  if (installations.data && installations.data.length > 0) {
+  // Show error if any
+  if (connectionStatus.isError || installations.isError) {
+    return (
+      <div className="text-center py-4 text-destructive">
+        <p>Error loading connection status.</p>
+        <Button 
+          variant="outline" 
+          onClick={refreshConnection}
+          className="mt-2"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  // If connected, show installations
+  if (connectionStatus.data?.connected && installations.data && installations.data.length > 0) {
     return (
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-medium">Connected Locations</h3>
           <Button 
             variant="outline" 
-            onClick={() => installations.refetch()}
+            onClick={refreshConnection}
             className="flex items-center"
-            disabled={installations.isLoading || installations.isFetching}
+            disabled={connectionStatus.isLoading || connectionStatus.isFetching}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${installations.isFetching ? 'animate-spin' : ''}`} />
+            {(connectionStatus.isLoading || connectionStatus.isFetching) ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
             Refresh
           </Button>
         </div>
@@ -75,12 +102,26 @@ export default function ConnectedLocations({ integrationStatus }: ConnectedLocat
     );
   }
 
+  // Default: No connections
   return (
     <div className="text-center py-8">
       <h3 className="text-lg font-medium mb-2">No Connections</h3>
       <p className="text-gray-500 mb-4">
         Connect your GoHighLevel account to get started with AI messaging.
       </p>
+      <Button 
+        variant="outline" 
+        onClick={refreshConnection}
+        className="mt-2"
+        disabled={connectionStatus.isLoading || connectionStatus.isFetching}
+      >
+        {(connectionStatus.isLoading || connectionStatus.isFetching) ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <RefreshCw className="mr-2 h-4 w-4" />
+        )}
+        Refresh Status
+      </Button>
     </div>
   );
 }

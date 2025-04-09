@@ -1,13 +1,12 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const SUPABASE_URL = "https://vxgvmmudspqwsaedcmsl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Z3ZtbXVkc3Bxd3NhZWRjbXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5ODk4MzgsImV4cCI6MjA1OTU2NTgzOH0.wSYR4wG-jL2ZjYsluabFRGQKqtajPFhWrqE8QAd0YXw";
-const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || Deno.env.get("GHL_Client_ID");
-const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || Deno.env.get("GHL_Client_Secret");
+const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || "67f3402bb0c46a1b8d090311-m96hrsry";
+const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") || "f232bf2c-a0e9-4af4-8f63-0cbc7a074db1";
 const GHL_TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token";
-const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/oauth-callback";
+const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
 const FRONTEND_URL = "https://preview--nurture-flow-smart-leads.lovable.app";
 
 const corsHeaders = {

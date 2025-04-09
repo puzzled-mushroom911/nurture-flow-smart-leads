@@ -34,6 +34,8 @@ export const ghlService = {
    */
   async getConnectionStatus(): Promise<GHLConnection> {
     try {
+      console.log('Checking GHL connection status...');
+      
       type InstallationResponse = {
         id: string;
         location_id: string;
@@ -43,20 +45,24 @@ export const ghlService = {
         created_at: string;
       };
 
-      const { data: installation, error } = await supabase
+      const { data: installations, error } = await supabase
         .from('ghl_installations')
         .select('*')
-        .limit(1)
-        .single();
+        .order('created_at', { ascending: false });
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('Error fetching GHL installation:', error.message);
         throw error;
       }
       
-      if (!installation) {
+      if (!installations || installations.length === 0) {
+        console.log('No GHL installation found');
         return { connected: false };
       }
       
+      // Get the most recent installation
+      const installation = installations[0];
+      console.log('Found GHL installation:', installation.id);
       const typedInstallation = installation as unknown as InstallationResponse;
       
       return {
