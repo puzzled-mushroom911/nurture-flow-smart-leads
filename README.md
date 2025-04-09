@@ -650,3 +650,42 @@ const IntegrationDashboard: React.FC<IntegrationDashboardProps> = ({ userId }) =
     </div>
   );
 };
+
+## 🔄 Recent Changes
+
+### GoHighLevel Template Integration
+- Cloned GHL Marketplace App Template (April 9, 2024)
+- Template repository: https://github.com/GoHighLevel/ghl-marketplace-app-template.git
+- Integration status: In progress
+- Key changes needed:
+  - Update authorization flow to match GHL standards
+  - Implement proper installation management
+  - Add webhook handling
+  - Integrate SSO capabilities
+  - Update environment variables structure
+
+### Implementation Plan
+1. Authorization Flow Updates
+   - Implement standard GHL OAuth flow
+   - Add proper token refresh mechanism
+   - Update redirect URL handling
+
+2. API Integration
+   - Restructure GHL service for company/location-level calls
+   - Implement proper error handling
+   - Add rate limiting and retry logic
+
+3. Installation Management
+   - Update database schema for multi-location support
+   - Implement installation retrieval logic
+   - Add token validation and refresh
+
+4. Webhook System
+   - Create dedicated webhook handler
+   - Implement signature validation
+   - Add event processing logic
+
+5. SSO Integration
+   - Add SSO key to environment
+   - Implement token decryption
+   - Create user session management
