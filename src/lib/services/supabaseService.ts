@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Lead, Message, MessageWithLead } from '../types';
 
+export { supabase };
 export const supabaseService = {
   // Lead operations
   async getLeads(): Promise<Lead[]> {

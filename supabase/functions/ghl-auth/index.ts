@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/nurtureflow-callback";
+const REDIRECT_URI = "https://vxgvmmudspqwsaedcmsl.supabase.co/functions/v1/ghl-callback";
 const GHL_AUTH_URL = "https://marketplace.gohighlevel.com/oauth/chooselocation";
 const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") || "67f3402bb0c46a1b8d090311-m96hrsry";
 
