@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -26,19 +26,38 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // GHL OAuth routes
-app.post('/ghl/auth', authHandler);
-app.get('/ghl/callback', callbackHandler);
+app.post('/ghl/auth', async (req: Request, res: Response) => {
+  try {
+    await authHandler(req, res);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/ghl/callback', async (req: Request, res: Response) => {
+  try {
+    await callbackHandler(req, res);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // GHL Webhook route
-app.post('/api/webhooks/ghl', webhookHandler);
+app.post('/api/webhooks/ghl', async (req: Request, res: Response) => {
+  try {
+    await webhookHandler(req, res);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // Root route for testing
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Nurture Flow Smart Leads API is running' });
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
   res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
