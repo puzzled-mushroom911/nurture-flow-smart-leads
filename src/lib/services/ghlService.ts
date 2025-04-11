@@ -38,9 +38,15 @@ export class GHLService {
   private redirectUri: string;
 
   private constructor() {
-    this.clientId = process.env.NEXT_PUBLIC_GHL_CLIENT_ID || '';
+    this.clientId = process.env.GHL_CLIENT_ID || '';
     this.clientSecret = process.env.GHL_CLIENT_SECRET || '';
-    this.redirectUri = process.env.NEXT_PUBLIC_GHL_REDIRECT_URI || '';
+    this.redirectUri = process.env.GHL_REDIRECT_URI || '';
+    
+    // Log environment variables (for debugging)
+    console.log('GHL Environment Variables:');
+    console.log('Client ID:', this.clientId ? 'Set (Hidden)' : 'Not Set');
+    console.log('Client Secret:', this.clientSecret ? 'Set (Hidden)' : 'Not Set');
+    console.log('Redirect URI:', this.redirectUri || 'Not Set');
   }
 
   public static getInstance(): GHLService {
@@ -52,7 +58,7 @@ export class GHLService {
 
   async startOAuthFlow(userId: string): Promise<string> {
     try {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      if (!process.env.SUPABASE_URL) {
         throw new Error('Supabase URL is not configured');
       }
 
