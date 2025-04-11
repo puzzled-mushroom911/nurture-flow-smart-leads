@@ -15,12 +15,21 @@
   ],
   "routes": [
     {
+      "src": "/auth/callback",
+      "dest": "src/server.ts"
+    },
+    {
+      "src": "/ghl/(.*)",
+      "dest": "src/server.ts"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "src/server.ts"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/$1"
+      "dest": "/dist/$1",
+      "continue": true
     }
   ]
 } 
