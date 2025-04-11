@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import authHandler from './api/ghl/auth';
 import callbackHandler from './api/ghl/callback';
 import webhookHandler from './api/webhooks/ghl';
@@ -22,33 +21,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files (for the frontend)
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-app.use(express.static(path.join(__dirname, '../dist')));
+app.use(express.static(path.join(process.cwd(), 'dist')));
 
 // GHL OAuth routes
-router.post('/ghl/auth', async (req: Request, res: Response) => {
-  try {
-    await authHandler(req, res);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+router.post('/ghl/auth', (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(authHandler(req, res)).catch(next);
 });
 
-router.get('/ghl/callback', async (req: Request, res: Response) => {
-  try {
-    await callbackHandler(req, res);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+router.get('/ghl/callback', (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(callbackHandler(req, res)).catch(next);
 });
 
 // GHL Webhook route
-router.post('/api/webhooks/ghl', async (req: Request, res: Response) => {
-  try {
-    await webhookHandler(req, res);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+router.post('/api/webhooks/ghl', (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(webhookHandler(req, res)).catch(next);
 });
 
 // Root route for testing

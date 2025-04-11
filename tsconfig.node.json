@@ -2,8 +2,8 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "target": "ESNext",
@@ -15,8 +15,11 @@
     "types": ["node"],
     "outDir": "dist",
     "rootDir": ".",
-    "lib": ["ES2020", "DOM"],
-    "moduleDetection": "force"
+    "lib": ["ES2020", "DOM"]
   },
-  "include": ["vite.config.ts", "src/server.ts", "src/api/**/*.ts"]
+  "include": ["vite.config.ts", "src/server.ts", "src/api/**/*.ts"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }
