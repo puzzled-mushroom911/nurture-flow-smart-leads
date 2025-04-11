@@ -10,7 +10,14 @@
     },
     {
       "src": "src/server.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "tsc",
+        "tscOptions": {
+          "skipLibCheck": true,
+          "typeCheck": false
+        }
+      }
     }
   ],
   "routes": [
@@ -24,6 +31,10 @@
     },
     {
       "src": "/api/(.*)",
+      "dest": "src/server.ts"
+    },
+    {
+      "src": "/start-auth",
       "dest": "src/server.ts"
     },
     {

@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction, Router } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -13,7 +13,6 @@ dotenv.config();
 
 // Create Express application
 const app = express();
-const router = Router();
 const PORT = process.env.PORT || 3000;
 
 // Setup middleware
@@ -25,21 +24,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), 'dist')));
 
 // GHL OAuth routes
-router.post('/ghl/auth', (req: Request, res: Response, next: NextFunction) => {
+app.post('/ghl/auth', function(req: Request, res: Response, next: NextFunction) {
   Promise.resolve(authHandler(req, res)).catch(next);
 });
 
-router.get('/ghl/callback', (req: Request, res: Response, next: NextFunction) => {
+app.get('/ghl/callback', function(req: Request, res: Response, next: NextFunction) {
   Promise.resolve(callbackHandler(req, res)).catch(next);
 });
 
 // GHL Webhook route
-router.post('/api/webhooks/ghl', (req: Request, res: Response, next: NextFunction) => {
+app.post('/api/webhooks/ghl', function(req: Request, res: Response, next: NextFunction) {
   Promise.resolve(webhookHandler(req, res)).catch(next);
 });
 
 // Test GHL OAuth callback route
-router.get('/auth/callback', async (req: Request, res: Response) => {
+app.get('/auth/callback', async function(req: Request, res: Response) {
   try {
     console.log('Received GHL callback:', req.query);
     const { code, state, error, error_description } = req.query;
@@ -99,7 +98,7 @@ router.get('/auth/callback', async (req: Request, res: Response) => {
 });
 
 // Test route for starting auth flow
-router.get('/start-auth', (req: Request, res: Response) => {
+app.get('/start-auth', function(req: Request, res: Response) {
   const state = Math.random().toString(36).substring(2, 15);
   const authUrl = `https://marketplace.gohighlevel.com/oauth/chooselocation?client_id=${process.env.GHL_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.GHL_REDIRECT_URI || '')}&scope=contacts.readonly+contacts.write&state=${state}`;
   console.log('Authorization URL:', authUrl);
@@ -107,12 +106,9 @@ router.get('/start-auth', (req: Request, res: Response) => {
 });
 
 // Root route for testing
-router.get('/api/health', (req: Request, res: Response) => {
+app.get('/api/health', function(req: Request, res: Response) {
   res.json({ status: 'ok', message: 'Nurture Flow Smart Leads API is running' });
 });
-
-// Use the router
-app.use('/', router);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
