@@ -14,7 +14,9 @@
     "resolveJsonModule": true,
     "types": ["node"],
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "lib": ["ES2020", "DOM"],
+    "moduleDetection": "force"
   },
   "include": ["vite.config.ts", "src/server.ts", "src/api/**/*.ts"]
 }
