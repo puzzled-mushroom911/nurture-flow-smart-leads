@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Router } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -13,6 +13,7 @@ dotenv.config();
 
 // Create Express application
 const app = express();
+const router = Router();
 const PORT = process.env.PORT || 3000;
 
 // Setup middleware
@@ -26,7 +27,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // GHL OAuth routes
-app.post('/ghl/auth', async (req: Request, res: Response) => {
+router.post('/ghl/auth', async (req: Request, res: Response) => {
   try {
     await authHandler(req, res);
   } catch (error) {
@@ -34,7 +35,7 @@ app.post('/ghl/auth', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/ghl/callback', async (req: Request, res: Response) => {
+router.get('/ghl/callback', async (req: Request, res: Response) => {
   try {
     await callbackHandler(req, res);
   } catch (error) {
@@ -43,7 +44,7 @@ app.get('/ghl/callback', async (req: Request, res: Response) => {
 });
 
 // GHL Webhook route
-app.post('/api/webhooks/ghl', async (req: Request, res: Response) => {
+router.post('/api/webhooks/ghl', async (req: Request, res: Response) => {
   try {
     await webhookHandler(req, res);
   } catch (error) {
@@ -52,9 +53,12 @@ app.post('/api/webhooks/ghl', async (req: Request, res: Response) => {
 });
 
 // Root route for testing
-app.get('/api/health', (req: Request, res: Response) => {
+router.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Nurture Flow Smart Leads API is running' });
 });
+
+// Use the router
+app.use('/', router);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

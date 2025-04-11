@@ -3,7 +3,7 @@
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "target": "ESNext",
@@ -12,7 +12,9 @@
     "noEmit": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "."
   },
-  "include": ["vite.config.ts", "src/server.ts"]
+  "include": ["vite.config.ts", "src/server.ts", "src/api/**/*.ts"]
 }
